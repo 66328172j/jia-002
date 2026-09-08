@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('设备档案')"/>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">设备编号</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="deviceNo" placeholder="设备编号" class="layui-input">
+                </div>
+
+                <label class="layui-form-label">设备名称</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="deviceName" placeholder="设备名称" class="layui-input">
+                </div>
+
+                <label class="layui-form-label">所在车间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="workshop" placeholder="车间名称" class="layui-input">
+                </div>
+
+                <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="device-query">
+                    <i class="layui-icon layui-icon-search"></i>
+                    查询
+                </button>
+                <button type="reset" class="pear-btn pear-btn-md">
+                    <i class="layui-icon layui-icon-refresh"></i>
+                    重置
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="device-table" lay-filter="device-table"></table>
+    </div>
+</div>
+</body>
+
+<script type="text/html" id="device-toolbar">
+    <button shiro:hasPermission="gen:sysDevice:add" class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">
+        <i class="layui-icon layui-icon-add-1"></i>
+        新增
+    </button>
+    <button shiro:hasPermission="gen:sysDevice:remove" class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除
+    </button>
+</script>
+
+<script type="text/html" id="device-bar">
+    <button shiro:hasPermission="gen:sysDevice:edit" class="pear-btn pear-btn-primary pear-btn-sm" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>
+    </button>
+    <button shiro:hasPermission="gen:sysDevice:remove" class="pear-btn pear-btn-danger pear-btn-sm" lay-event="remove"><i class="layui-icon layui-icon-delete"></i>
+    </button>
+</script>
+
+<script type="text/html" id="device-status">
+    {{#  if(d.status===0){ }}
+    <span class="layui-badge layui-bg-green">在用</span>
+    {{#  } else if(d.status===1){ }}
+    <span class="layui-badge layui-bg-blue">停机</span>
+    {{#  } else if(d.status===2){ }}
+    <span class="layui-badge layui-bg-orange">维修</span>
+    {{#  } else if(d.status===3){ }}
+    <span class="layui-badge layui-bg-gray">报废</span>
+    {{#  } }}
+</script>
+
+<th:block th:include="include :: footer"/>
+<script>
+    layui.use(['table', 'form', 'jquery'], function () {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+
+        let MODULE_PATH = rootPath + "/SysDeviceController/";
+        let cols = [
+            [
+                {type: 'checkbox', fixed: 'left'},
+                {title: '设备编号', field: 'deviceNo', align: 'center', fixed: 'left'},
+                {title: '设备名称', field: 'deviceName', align: 'center', minWidth: 140},
+                {title: '型号', field: 'deviceModel', align: 'center', minWidth: 100},
+                {title: '生产厂家', field: 'manufacturer', align: 'center', minWidth: 140},
+                {title: '出厂日期', field: 'productionDate', align: 'center', width: 110},
+                {title: '所在车间', field: 'workshop', align: 'center', width: 110},
+                {title: '责任人', field: 'principal', align: 'center', width: 100},
+                {title: '状态', field: 'status', align: 'center', width: 80, templet: '#device-status'},
+                {title: '创建人', field: 'createBy', align: 'center', width: 100},
+                {title: '创建时间', field: 'createTime', align: 'center', width: 160},
+                {title: '操作', toolbar: '#device-bar', align: 'center', fixed: 'right', width: 120}
+            ]
+        ]
+
+        //table表单列表
+        table.render({
+            elem: '#device-table',
+            url: MODULE_PATH + 'list',
+            page: true,
+            limit: 20,
+            limits: [20, 50, 100],
+            method: 'post',
+            cols: cols,
+            skin: 'line',
+            toolbar: '#device-toolbar',
+            defaultToolbar: [{
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports'],
+            where: {
+                orderByColumn: "id",
+                isAsc: "asc"
+            }
+        });
+
+        //table图标事件绑定
+        table.on('tool(device-table)', function (obj) {
+            if (obj.event === 'remove') {
+                window.remove(obj);
+            } else if (obj.event === 'edit') {
+                window.edit(obj);
+            }
+        });
+
+        //table工具栏绑定
+        table.on('toolbar(device-table)', function (obj) {
+            if (obj.event === 'add') {
+                window.add();
+            } else if (obj.event === 'refresh') {
+                window.refresh();
+            } else if (obj.event === 'batchRemove') {
+                window.batchRemove(obj);
+            }
+        });
+
+        //查询按钮绑定
+        form.on('submit(device-query)', function (data) {
+            //保留分页排序字段，避免查询后失去按编号排序
+            let query = $.extend({orderByColumn: "id", isAsc: "asc"}, data.field);
+            table.reload('device-table', {where: query})
+            return false;
+        });
+
+        //添加
+        window.add = function () {
+            layer.open({
+                type: 2,
+                title: '新增设备',
+                shade: 0.1,
+                area: ['600px', '640px'],
+                content: MODULE_PATH + 'add'
+            });
+        }
+        //修改
+        window.edit = function (obj) {
+            layer.open({
+                type: 2,
+                title: '修改设备',
+                shade: 0.1,
+                area: ['600px', '640px'],
+                content: MODULE_PATH + 'edit/' + obj.data['id']
+            });
+        }
+
+        //删除
+        window.remove = function (obj) {
+            layer.confirm('确定要删除该设备', {icon: 3, title: '提示'}, function (index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH + "remove?ids=" + obj.data['id'],
+                    dataType: 'json',
+                    type: 'delete',
+                    success: function (result) {
+                        layer.close(loading);
+                        if (result.code == 200) {
+                            layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                                obj.del();
+                            });
+                        } else {
+                            layer.msg(result.msg, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        //批量删除
+        window.batchRemove = function (obj) {
+            let data = table.checkStatus(obj.config.id).data;
+            if (data.length === 0) {
+                layer.msg("未选中数据", {icon: 3, time: 1000});
+                return false;
+            }
+            let ids = "";
+            for (let i = 0; i < data.length; i++) {
+                ids += data[i].id + ",";
+            }
+            ids = ids.substr(0, ids.length - 1);
+            layer.confirm('确定要删除这些设备', {icon: 3, title: '提示'}, function (index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH + "remove?ids=" + ids,
+                    dataType: 'json',
+                    type: 'delete',
+                    success: function (result) {
+                        layer.close(loading);
+                        if (result.code == 200) {
+                            layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                                table.reload('device-table');
+                            });
+                        } else {
+                            layer.msg(result.msg, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        }
+        //刷新按钮
+        window.refresh = function () {
+            table.reload('device-table');
+        }
+    })
+</script>
+</html>

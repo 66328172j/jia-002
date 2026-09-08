@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('设备修改')"/>
+</head>
+<body>
+<form class="layui-form" action="" th:object="${SysDevice}">
+    <div class="mainBox">
+        <div class="main-container">
+            <div class="layui-form-item layui-hide">
+                <label class="layui-form-label">编号</label>
+                <div class="layui-input-block">
+                    <input type="text" th:value="*{id}" name="id" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">设备编号</label>
+                <div class="layui-input-block">
+                    <input th:value="*{deviceNo}" type="text" name="deviceNo" lay-verify="deviceNo" autocomplete="off" placeholder="请输入设备编号" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">设备名称</label>
+                <div class="layui-input-block">
+                    <input th:value="*{deviceName}" type="text" name="deviceName" lay-verify="required" autocomplete="off" placeholder="请输入设备名称" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">型号</label>
+                <div class="layui-input-block">
+                    <input th:value="*{deviceModel}" type="text" name="deviceModel" autocomplete="off" placeholder="请输入型号" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">生产厂家</label>
+                <div class="layui-input-block">
+                    <input th:value="*{manufacturer}" type="text" name="manufacturer" autocomplete="off" placeholder="请输入生产厂家" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">出厂日期</label>
+                <div class="layui-input-block">
+                    <input th:value="*{productionDate}" type="text" name="productionDate" id="productionDate" autocomplete="off" placeholder="请选择出厂日期" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">所在车间</label>
+                <div class="layui-input-block">
+                    <input th:value="*{workshop}" type="text" name="workshop" autocomplete="off" placeholder="请输入所在车间" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">责任人</label>
+                <div class="layui-input-block">
+                    <input th:value="*{principal}" type="text" name="principal" autocomplete="off" placeholder="请输入责任人" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">状态</label>
+                <div class="layui-input-block">
+                    <select id="status" name="status" th:field="*{status}">
+                        <option value="0">在用</option>
+                        <option value="1">停机</option>
+                        <option value="2">维修</option>
+                        <option value="3">报废</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item layui-form-text">
+                <label class="layui-form-label">备注</label>
+                <div class="layui-input-block">
+                    <textarea name="remark" th:text="*{remark}" placeholder="请输入备注" class="layui-textarea"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <div class="button-container">
+            <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm" lay-submit=""
+                    lay-filter="device-update">
+                <i class="layui-icon layui-icon-ok"></i>
+                提交
+            </button>
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-sm">
+                <i class="layui-icon layui-icon-refresh"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+<th:block th:include="include :: footer"/>
+<script>
+    layui.use(['form', 'jquery', 'laydate'], function () {
+        let form = layui.form;
+        let $ = layui.jquery;
+        let laydate = layui.laydate;
+        let MODULE_PATH = rootPath + "/SysDeviceController";
+
+        //出厂日期选择
+        laydate.render({
+            elem: '#productionDate',
+            type: 'date',
+            format: 'yyyy-MM-dd',
+            trigger: 'click'
+        });
+
+        //设备编号验证（排除自身记录）
+        form.verify({
+            deviceNo: function (value) {
+                if (value.length == 0) {
+                    return '设备编号不能为空';
+                }
+                var msg = "";
+                $.ajax({
+                    url: MODULE_PATH + '/checkDeviceNoUnique',
+                    data: "deviceNo=" + value + "&id=" + $("input[name='id']").val(),
+                    dataType: 'json',
+                    type: 'post',
+                    async: false,
+                    success: function (result) {
+                        msg = result;
+                    }
+                });
+                if (msg == 1) {
+                    return "设备编号已存在";
+                }
+            }
+        });
+
+        form.on('submit(device-update)', function (data) {
+            $.ajax({
+                url: MODULE_PATH + '/edit',
+                data: data.field,
+                dataType: 'json',
+                contentType: 'application/x-www-form-urlencoded',
+                type: 'post',
+                success: function (result) {
+                    if (result.code == 200) {
+                        layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                            parent.layer.close(parent.layer.getFrameIndex(window.name));//关闭当前页
+                            parent.layui.table.reload("device-table");
+                        });
+                    } else {
+                        layer.msg(result.msg, {icon: 2, time: 1000});
+                    }
+                }
+            })
+            return false;
+        });
+    })
+</script>
+</body>
+</html>

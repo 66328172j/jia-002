@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fc.v2.mapper.auto.TSysDeviceMapper">
+
+    <resultMap type="com.fc.v2.model.auto.TSysDevice" id="TSysDeviceResult">
+        <result property="id"    column="id"    />
+        <result property="deviceNo"    column="device_no"    />
+        <result property="deviceName"    column="device_name"    />
+        <result property="deviceModel"    column="device_model"    />
+        <result property="manufacturer"    column="manufacturer"    />
+        <result property="productionDate"    column="production_date"    />
+        <result property="workshop"    column="workshop"    />
+        <result property="principal"    column="principal"    />
+        <result property="status"    column="status"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectTSysDeviceVo">
+        select id, device_no, device_name, device_model, manufacturer, production_date, workshop, principal, status, create_by, create_time, update_by, update_time, remark from t_sys_device
+    </sql>
+
+</mapper>
