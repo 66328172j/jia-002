@@ -52,12 +52,8 @@
             <div class="layui-form-item">
                 <label class="layui-form-label">状态</label>
                 <div class="layui-input-block">
-                    <select id="status" name="status">
-                        <option value="0" selected>在用</option>
-                        <option value="1">停机</option>
-                        <option value="2">维修</option>
-                        <option value="3">报废</option>
-                    </select>
+                    <input type="text" value="在用" disabled placeholder="新建设备默认在用" class="layui-input">
+                    <div style="line-height:22px;color:#999;font-size:12px;">新建设备统一为“在用”，停用/维修/报废请建档后通过修改设备进行状态流转</div>
                 </div>
             </div>
             <div class="layui-form-item layui-form-text">

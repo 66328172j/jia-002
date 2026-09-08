@@ -69,6 +69,10 @@
     <span class="layui-badge layui-bg-orange">维修</span>
     {{#  } else if(d.status===3){ }}
     <span class="layui-badge layui-bg-gray">报废</span>
+    {{#  } else if(d.status===null || d.status===undefined || d.status===''){ }}
+    <span class="layui-badge layui-bg-red">状态缺失</span>
+    {{#  } else { }}
+    <span class="layui-badge layui-bg-red">{{d.status}}</span>
     {{#  } }}
 </script>
 

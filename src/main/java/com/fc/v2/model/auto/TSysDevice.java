@@ -59,6 +59,10 @@ public class TSysDevice extends BaseEntity {
     @ApiModelProperty(value = "状态(0在用 1停机 2维修 3报废)")
     private Integer status;
 
+    /** 乐观锁版本号，编辑保存时校验，防止多人同时操作互相覆盖 */
+    @ApiModelProperty(value = "乐观锁版本号")
+    private Integer version;
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -131,6 +135,14 @@ public class TSysDevice extends BaseEntity {
         return status;
     }
 
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
@@ -143,6 +155,7 @@ public class TSysDevice extends BaseEntity {
                 .append("workshop", getWorkshop())
                 .append("principal", getPrincipal())
                 .append("status", getStatus())
+                .append("version", getVersion())
                 .append("createBy", getCreateBy())
                 .append("createTime", getCreateTime())
                 .append("updateBy", getUpdateBy())

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('设备履历')"/>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <input type="hidden" id="deviceId" th:value="${deviceId}">
+        <table id="device-log-table" lay-filter="device-log-table"></table>
+    </div>
+</div>
+
+<script type="text/html" id="change-type-tpl">
+    {{#  if(d.changeType===1){ }}
+    <span class="layui-badge layui-bg-green">新增建档</span>
+    {{#  } else if(d.changeType===2){ }}
+    <span class="layui-badge layui-bg-orange">状态变更</span>
+    {{#  } else if(d.changeType===3){ }}
+    <span class="layui-badge layui-bg-gray">删除档案</span>
+    {{#  } }}
+</script>
+
+<th:block th:include="include :: footer"/>
+<script>
+    layui.use(['table', 'jquery'], function () {
+        let table = layui.table;
+        let $ = layui.jquery;
+        let deviceId = $("#deviceId").val();
+
+        // 状态编码转中文显示名
+        let statusText = function (v) {
+            if (v === null || v === undefined || v === '') {
+                return '—';
+            }
+            return {0: '在用', 1: '停机', 2: '维修', 3: '报废'}[v] || v;
+        };
+
+        let MODULE_PATH = rootPath + "/SysDeviceLogController/";
+        table.render({
+            elem: '#device-log-table',
+            url: MODULE_PATH + 'list',
+            page: true,
+            limit: 20,
+            limits: [20, 50, 100],
+            method: 'post',
+            where: {deviceId: deviceId},
+            cols: [[
+                {title: '操作时间', field: 'createTime', align: 'center', width: 170},
+                {title: '操作人', field: 'createBy', align: 'center', width: 110},
+                {title: '操作', field: 'changeType', align: 'center', width: 110, templet: '#change-type-tpl'},
+                {title: '状态变化', align: 'center', minWidth: 200, templet: function (d) {
+                        if (d.changeType === 1) {
+                            return '初始为【' + statusText(d.newStatus) + '】';
+                        }
+                        if (d.changeType === 3) {
+                            return '删除时状态【' + statusText(d.oldStatus) + '】';
+                        }
+                        return statusText(d.oldStatus) + ' → ' + statusText(d.newStatus);
+                    }},
+                {title: '备注', field: 'remark', align: 'center', minWidth: 160}
+            ]],
+            skin: 'line'
+        });
+    })
+</script>
+</body>
+</html>

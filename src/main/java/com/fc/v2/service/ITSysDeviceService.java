@@ -70,4 +70,29 @@ public interface ITSysDeviceService extends IService<TSysDevice> {
      * @return 重复数量
      */
     int checkDeviceNoUnique(TSysDevice tSysDevice);
+
+    /**
+     * 新增设备档案并写一条建档履历
+     *
+     * @param tSysDevice 设备档案
+     * @return 结果
+     */
+    int insertTSysDeviceWithLog(TSysDevice tSysDevice);
+
+    /**
+     * 编辑保存设备档案：按 version 乐观锁更新，状态变化时写一条流转履历
+     *
+     * @param tSysDevice 编辑后的设备档案（status 已按状态机校验过）
+     * @param dbRow      编辑前数据库中的原始记录（用于旧状态与版本比对）
+     * @return 更新行数（0 表示已被他人抢先修改，乐观锁冲突）
+     */
+    int updateTSysDeviceWithLog(TSysDevice tSysDevice, TSysDevice dbRow);
+
+    /**
+     * 批量删除设备档案，删除前为每台设备写一条删除履历
+     *
+     * @param ids 需要删除的数据ID
+     * @return 结果
+     */
+    int deleteTSysDeviceWithLog(String ids);
 }

@@ -11,6 +11,7 @@
                 <label class="layui-form-label">编号</label>
                 <div class="layui-input-block">
                     <input type="text" th:value="*{id}" name="id" autocomplete="off" class="layui-input">
+                    <input type="hidden" name="version" th:value="*{version}">
                 </div>
             </div>
             <div class="layui-form-item">
@@ -58,12 +59,13 @@
             <div class="layui-form-item">
                 <label class="layui-form-label">状态</label>
                 <div class="layui-input-block">
-                    <select id="status" name="status" th:field="*{status}">
-                        <option value="0">在用</option>
-                        <option value="1">停机</option>
-                        <option value="2">维修</option>
-                        <option value="3">报废</option>
+                    <select id="status" name="status">
+                        <option th:each="s : ${allowedStatus}"
+                                th:value="${s}"
+                                th:selected="${s.equals(SysDevice.status)}"
+                                th:text="${s == 0 ? '在用' : (s == 1 ? '停机' : (s == 2 ? '维修' : '报废'))}"></option>
                     </select>
+                    <div style="line-height:22px;color:#999;font-size:12px;">状态按设备管理规则流转：不在下拉中的目标状态不允许选择，报废后不可再变更。</div>
                 </div>
             </div>
             <div class="layui-form-item layui-form-text">
@@ -139,6 +141,23 @@
                         layer.msg(result.msg, {icon: 1, time: 1000}, function () {
                             parent.layer.close(parent.layer.getFrameIndex(window.name));//关闭当前页
                             parent.layui.table.reload("device-table");
+                        });
+                    } else if (result.code == 409) {
+                        // 并发冲突：本次保存未执行（未覆盖他人改动）。msg 已由后端给出“对方保存后的现状”，
+                        // 弹层引导用户刷新后基于最新数据重新确认，避免拿旧页面整体覆盖。
+                        layer.open({
+                            type: 0,
+                            title: '保存冲突',
+                            area: '460px',
+                            content: '<div style="padding:14px 18px;line-height:26px;word-break:break-all;">'
+                                + result.msg + '</div>',
+                            btn: ['我知道了，重新加载数据'],
+                            yes: function (index) {
+                                layer.close(index);
+                                // 关闭当前编辑页并刷新列表，让用户基于最新数据重新打开编辑、再确认保存
+                                parent.layer.close(parent.layer.getFrameIndex(window.name));
+                                parent.layui.table.reload("device-table");
+                            }
                         });
                     } else {
                         layer.msg(result.msg, {icon: 2, time: 1000});
